@@ -15,7 +15,7 @@ const UserPlaces = () => {
   useEffect(()=>{
     const fetchPlaces = async () => {
       try{
-       const resonseData= await sendRequest('http://localhost:5000/api/places/user/' + userId);
+       const resonseData = await sendRequest(import.meta.env.VITE_BACKEND_URL + '/places/user/' + userId);
        setLoadedPlaces(resonseData.places);
       }catch(err){
         console.log(err);

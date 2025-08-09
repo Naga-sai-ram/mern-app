@@ -13,7 +13,7 @@ const Users=()=>{
         const fetchUsers = async () => {
             try{
                 console.log('🔄 Fetching users from API...');
-                const responseData = await sendRequest('http://localhost:5000/api/users?t=' + Date.now());
+                const responseData = await sendRequest(import.meta.env.VITE_BACKEND_URL + '/users?t=' + Date.now());
                 console.log('✅ Users API response:', responseData);
                 
                 if (responseData && responseData.users) {
