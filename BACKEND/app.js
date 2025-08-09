@@ -66,7 +66,7 @@ mongoose
   .connect(MONGODB_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB');
-    app.listen(5000, () => {
+    app.listen(process.env.PORT||5000, () => {
       console.log('🚀 Backend running on http://localhost:5000');
     });
   })
