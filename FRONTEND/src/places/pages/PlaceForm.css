@@ -1,0 +1,40 @@
+.place-form {
+  list-style: none;
+  margin: 1rem;
+  padding: 1rem;
+  width: calc(100% - 2rem);
+  max-width: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+  border-radius: 6px;
+  background: white;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 480px) {
+  .place-form {
+    margin: 1.5rem auto;
+    width: 95%;
+    max-width: 30rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .place-form {
+    width: 70%;
+    max-width: 60rem;
+    padding: 3rem;
+    margin: 2rem auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .place-form {
+    width: 60%;
+    max-width: 70rem;
+    padding: 3rem;
+    margin: 3rem auto;
+  }
+}

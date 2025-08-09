@@ -1,0 +1,83 @@
+.user-item {
+  margin: 0;
+  width: calc(50% - 0.5rem);
+  min-width: 22rem;
+  max-width: 28rem;
+  border-radius: 8px;
+  overflow: hidden;
+  flex: 0 0 calc(50% - 0.5rem);
+}
+
+.user-item a {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 8rem;
+  text-decoration: none;
+  padding: 1.2rem;
+  color: white;
+  background: #000;
+  transition: background 0.3s ease, color 0.3s ease;
+  overflow: hidden;
+}
+
+.user-item a:hover,
+.user-item a:active {
+  background: #ffd900;
+  color: #292929;
+}
+
+.user-item__content {
+  padding: 0;
+  background: transparent;
+}
+
+/* ✅ No border, clean black card */
+.no-border-card {
+  background: #000 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.user-item__image {
+  width: 5rem;
+  height: 5rem;
+  margin-right: 1.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #ffd900;
+  flex-shrink: 0;
+}
+
+.user-item__info h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: normal;
+  color: #ffd900;
+  white-space: normal;
+  overflow: hidden;
+  word-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.2;
+  max-width: 100%;
+  hyphens: auto;
+}
+
+
+.user-item__info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.user-item__info h3 {
+  margin: 0;
+  color: white;
+}
+
+.user-item:hover h2,
+.user-item:active h2,
+.user-item:hover h3,
+.user-item:active h3 {
+  color: #292929;
+}
