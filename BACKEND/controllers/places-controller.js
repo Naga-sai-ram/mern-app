@@ -120,17 +120,17 @@ const createPlace = async (req, res, next) => {
   let user;
   try {
     user = await User.findById(req.userData.userId); // Fetch user by ID from request data
+    if (!user) {
+      console.error('❌ No user found for userId:', req.userData.userId);
+      const error = new HttpError('Could not find user for provided id.', 404);
+      return next(error);
+    }
+    console.log('✅ Found user for place creation:', user);
   } catch (err) {
+    console.error('❌ Error fetching user for place creation:', err);
     const error = new HttpError('Creating place failed, please try again.', 500);
     return next(error);
   }
-
-  if (!user) {
-    const error = new HttpError('Could not find user for provided id.', 404); 
-    return next(error);
-  }
-
-  console.log(user);
 
   try {
     const sess = await Place.startSession();
@@ -198,8 +198,8 @@ const deletePlace =async (req, res, next) => {
   const placeId = req.params.pid;
   let place;
   try {
-    place =await Place.findById(placeId).populate('creator'); // Populate creator to check if user exists
-  } catch (err) {   
+    place = await Place.findById(placeId).populate('creator');
+  } catch (err) {
     const error = new HttpError('Something went wrong, could not delete place.', 500);
     return next(error);
   }
@@ -208,12 +208,11 @@ const deletePlace =async (req, res, next) => {
     const error = new HttpError('Could not find place for this id.', 404);
     return next(error);
   }
-  
+
   if (place.creator.id !== req.userData.userId) {
     const error = new HttpError('You are not allowed to delete this place.', 401);
-    return next(error); 
+    return next(error);
   }
-  
 
   try {
     const sess = await Place.startSession();
@@ -227,8 +226,7 @@ const deletePlace =async (req, res, next) => {
     return next(error);
   }
 
-  // Optionally, delete image from Cloudinary using its public_id if needed
-  // (not implemented here)
+  // No fs.unlink for Cloudinary URLs. If you want to delete the image from Cloudinary, use the Cloudinary API here.
 
   res.status(200).json({ message: 'Deleted place.' });
 };
