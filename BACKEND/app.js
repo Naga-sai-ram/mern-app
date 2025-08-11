@@ -7,6 +7,21 @@ const fs = require('fs');
 // Load environment variables
 require('dotenv').config();
 
+// Load environment from nodemon.json for development
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    const nodemonConfig = require('./nodemon.json');
+    Object.keys(nodemonConfig.env).forEach(key => {
+      if (!process.env[key]) {
+        process.env[key] = nodemonConfig.env[key];
+      }
+    });
+    console.log('✅ Loaded environment variables from nodemon.json');
+  } catch (error) {
+    console.log('⚠️  Could not load nodemon.json (this is normal in production)');
+  }
+}
+
 const placesRoutes = require('./routes/places-routes');
 const usersRoutes = require('./routes/users-routes');
 const HttpError = require('./models/http-error');
@@ -61,6 +76,15 @@ app.use((error, req, res, next) => {
 // MongoDB connection string with environment variables
 const MONGODB_URI = process.env.MONGODB_URI || 
   `mongodb+srv://${process.env.DB_USER || 'your_username'}:${process.env.DB_PASSWORD || 'your_password'}@cluster0.jvdrm4l.mongodb.net/${process.env.DB_NAME || 'your_database'}?retryWrites=true&w=majority&appName=Cluster0`;
+
+// Debug logging for development
+if (process.env.NODE_ENV !== 'production') {
+  console.log('🔍 MongoDB Connection Debug:');
+  console.log('DB_USER:', process.env.DB_USER);
+  console.log('DB_NAME:', process.env.DB_NAME);
+  console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***hidden***' : 'NOT SET');
+  console.log('MONGODB_URI set directly:', !!process.env.MONGODB_URI);
+}
 
 mongoose
   .connect(MONGODB_URI)

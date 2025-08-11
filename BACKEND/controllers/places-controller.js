@@ -20,20 +20,14 @@ const getAllPlaces = async (req, res, next) => {
     return next(error);
   }
 
-  // Transform places to handle both old and new image path formats
+  // Use image URL directly (Cloudinary)
   const transformedPlaces = places.map(place => {
     const placeObj = place.toObject({ getters: true });
-    
-    // If the image path contains the full system path, extract just the filename
-    if (placeObj.image && (placeObj.image.includes('uploads\\images\\') || placeObj.image.includes('uploads/images/'))) {
-      placeObj.image = placeObj.image.split(/[\\\/]/).pop(); // Get just the filename
+    // If image is a Cloudinary URL, use as is
+    // If not, fallback to default image
+    if (!placeObj.image || !placeObj.image.startsWith('http')) {
+      placeObj.image = process.env.DEFAULT_PLACE_IMAGE_URL || '';
     }
-    
-    // Construct full image URL
-    if (placeObj.image) {
-      placeObj.image = `${req.protocol}://${req.get('host')}/uploads/images/${placeObj.image}`;
-    }
-    
     return placeObj;
   });
 
@@ -57,17 +51,9 @@ const getPlaceById = async (req, res, next) => {
   }
 
   const placeObj = place.toObject({ getters: true });
-  
-  // If the image path contains the full system path, extract just the filename
-  if (placeObj.image && (placeObj.image.includes('uploads\\images\\') || placeObj.image.includes('uploads/images/'))) {
-    placeObj.image = placeObj.image.split(/[\\\/]/).pop(); // Get just the filename
+  if (!placeObj.image || !placeObj.image.startsWith('http')) {
+    placeObj.image = process.env.DEFAULT_PLACE_IMAGE_URL || '';
   }
-
-  // Construct full image URL
-  if (placeObj.image) {
-    placeObj.image = `${req.protocol}://${req.get('host')}/uploads/images/${placeObj.image}`;
-  }
-
   res.json({ place: placeObj });
 };
 
@@ -89,20 +75,11 @@ const getPlacesByUserId = async (req, res, next) => {
     return next(new HttpError('Could not find places for the provided user id.', 404));
   }
 
-  // Transform places to handle both old and new image path formats
   const transformedPlaces = userWithPlaces.places.map(place => {
     const placeObj = place.toObject({ getters: true });
-    
-    // If the image path contains the full system path, extract just the filename
-    if (placeObj.image && (placeObj.image.includes('uploads\\images\\') || placeObj.image.includes('uploads/images/'))) {
-      placeObj.image = placeObj.image.split(/[\\\/]/).pop(); // Get just the filename
+    if (!placeObj.image || !placeObj.image.startsWith('http')) {
+      placeObj.image = process.env.DEFAULT_PLACE_IMAGE_URL || '';
     }
-    
-    // Construct full image URL
-    if (placeObj.image) {
-      placeObj.image = `${req.protocol}://${req.get('host')}/uploads/images/${placeObj.image}`;
-    }
-    
     return placeObj;
   });
 
@@ -112,8 +89,14 @@ const getPlacesByUserId = async (req, res, next) => {
 
 // ✅ POST /api/places/
 const createPlace = async (req, res, next) => {
+  console.log('🚀 Creating new place - Start');
+  console.log('📋 Request body:', { title: req.body.title, description: req.body.description, address: req.body.address });
+  console.log('📁 File upload:', req.file ? 'File received' : 'No file');
+  console.log('👤 User data:', req.userData);
+  
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('❌ Validation errors:', errors.array());
     return next(new HttpError('Invalid inputs passed, please check your data.', 422));
   }
 
@@ -130,8 +113,8 @@ const createPlace = async (req, res, next) => {
     description,
     address,
     location: coordinates,
-    image: req.file.filename, // Store just the filename, not the full path
-    creator: req.userData.userId // Assuming user ID is stored in req.userData
+    image: req.file ? (req.file.path || req.file.url) : process.env.DEFAULT_PLACE_IMAGE_URL || '', // Cloudinary URL
+    creator: req.userData.userId
   });
 
   let user;
@@ -158,16 +141,15 @@ const createPlace = async (req, res, next) => {
     await sess.commitTransaction();
 
   } catch (err) {
+    console.error('❌ Database transaction failed:', err);
     const error = new HttpError('Creating place failed, please try again.', 500);
     return next(error);
   }
 
-  // Convert to object and add full image URL
   const placeObj = createdPlace.toObject({ getters: true });
-  if (placeObj.image) {
-    placeObj.image = `${req.protocol}://${req.get('host')}/uploads/images/${placeObj.image}`;
+  if (!placeObj.image || !placeObj.image.startsWith('http')) {
+    placeObj.image = process.env.DEFAULT_PLACE_IMAGE_URL || '';
   }
-
   res.status(201).json({ place: placeObj });
 };
 
@@ -204,12 +186,10 @@ const updatePlace = async (req, res, next) => {
     return next(error);
   }
 
-  // Convert to object and add full image URL
   const placeObj = place.toObject({ getters: true });
-  if (placeObj.image) {
-    placeObj.image = `${req.protocol}://${req.get('host')}/uploads/images/${placeObj.image}`;
+  if (!placeObj.image || !placeObj.image.startsWith('http')) {
+    placeObj.image = process.env.DEFAULT_PLACE_IMAGE_URL || '';
   }
-
   res.status(200).json({ place: placeObj });
 };
 
@@ -235,14 +215,11 @@ const deletePlace =async (req, res, next) => {
   }
   
 
-const imagePath = path.join(__dirname, 'uploads', 'images', place.image);
-
-
   try {
     const sess = await Place.startSession();
     sess.startTransaction();
     await place.deleteOne({ session: sess });
-    place.creator.places.pull(place); // Assuming User model has a places field
+    place.creator.places.pull(place);
     await place.creator.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
@@ -250,9 +227,8 @@ const imagePath = path.join(__dirname, 'uploads', 'images', place.image);
     return next(error);
   }
 
-  fs.unlink(imagePath, err => {
-    console.log(err); 
-  });
+  // Optionally, delete image from Cloudinary using its public_id if needed
+  // (not implemented here)
 
   res.status(200).json({ message: 'Deleted place.' });
 };

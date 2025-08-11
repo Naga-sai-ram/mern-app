@@ -29,23 +29,31 @@ const NewPlace = () => {
 
   const placeSubmitHandler = async event => {
     event.preventDefault();
+
+    if (!auth.token) {
+      console.error('❌ No token found in context');
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append('title', formState.inputs.title.value);
       formData.append('description', formState.inputs.description.value);
       formData.append('address', formState.inputs.address.value);
       formData.append('image', formState.inputs.image.value);
-      await sendRequest(`${import.meta.env.VITE_BACKEND_URL}/places`, 'POST', formData,{
+
+      await sendRequest(`${import.meta.env.VITE_BACKEND_URL}/places`, 'POST', formData, {
         Authorization: 'Bearer ' + auth.token
       });
-      navigate('/'); // ✅ navigate replaces history.push
+
+      navigate('/');
     } catch (err) {
-      console.error(err);
+      console.error('❌ Place creation failed:', err);
     }
   };
 
   return (
-    <React.Fragment>
+    <>
       <ErrorModal error={error} onClear={clearError} />
       <form className="place-form" onSubmit={placeSubmitHandler}>
         {isLoading && <LoadingSpinner asOverlay />}
@@ -84,7 +92,7 @@ const NewPlace = () => {
           Add Place
         </Button>
       </form>
-    </React.Fragment>
+    </>
   );
 };
 

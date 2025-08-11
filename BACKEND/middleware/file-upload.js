@@ -11,25 +11,36 @@ const MIME_TYPE_MAP = {
 
 // Ensure directory exists
 const imageDir = path.join(__dirname, '..', 'uploads', 'images');
-if (!fs.existsSync(imageDir)) {
-  fs.mkdirSync(imageDir, { recursive: true });
+try {
+  if (!fs.existsSync(imageDir)) {
+    fs.mkdirSync(imageDir, { recursive: true });
+    console.log('✅ Created uploads directory:', imageDir);
+  }
+} catch (error) {
+  console.error('❌ Failed to create uploads directory:', error);
+  console.log('⚠️  File uploads may fail on this deployment platform');
 }
+
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'mern-app-images', // Change folder name as needed
+    allowed_formats: ['jpg', 'jpeg', 'png']
+  }
+});
 
 const fileUpload = multer({
   limits: { fileSize: 500000 },
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, imageDir);
-    },
-    filename: (req, file, cb) => {
-      const ext = MIME_TYPE_MAP[file.mimetype];
-      cb(null, uuid() + '.' + ext);
-    }
-  }),
-  fileFilter: (req, file, cb) => {
-    const isValid = !!MIME_TYPE_MAP[file.mimetype];
-    cb(isValid ? null : new Error('Invalid mime type!'), isValid);
-  }
+  storage: storage
 });
 
 module.exports = fileUpload;

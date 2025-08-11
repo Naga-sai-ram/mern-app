@@ -12,10 +12,10 @@ const getUsers = async (req, res, next) => {
     
     const transformedUsers = users.map(user => {
       const userObj = user.toObject({ getters: true });
-      const imageUrl = `${req.protocol}://${req.get('host')}/uploads/images/${userObj.image}`;
-      
-      console.log(`👤 User: ${userObj.name}, Image: ${userObj.image}, URL: ${imageUrl}`);
-      
+      let imageUrl = userObj.image;
+      if (!imageUrl || !imageUrl.startsWith('http')) {
+        imageUrl = process.env.DEFAULT_USER_IMAGE_URL || '';
+      }
       return {
         ...userObj,
         image: imageUrl,
@@ -51,7 +51,7 @@ const signup = async (req, res, next) => {
       name,
       email,
       password: hashedPassword,
-      image: req.file.filename, // Store just the filename, not the full path
+      image: req.file ? (req.file.path || req.file.url) : process.env.DEFAULT_USER_IMAGE_URL || '', // Cloudinary URL
       places: []
     });
 
@@ -63,10 +63,14 @@ const signup = async (req, res, next) => {
       { expiresIn: '1h' }
     );
 
+    let imageUrl = createdUser.image;
+    if (!imageUrl || !imageUrl.startsWith('http')) {
+      imageUrl = process.env.DEFAULT_USER_IMAGE_URL || '';
+    }
     res.status(201).json({
       userId: createdUser.id,
       email: createdUser.email,
-      image: `${req.protocol}://${req.get('host')}/uploads/images/${createdUser.image}`,
+      image: imageUrl,
       token
     });
   } catch (err) {
@@ -99,10 +103,14 @@ const login = async (req, res, next) => {
       { expiresIn: '1h' }
     );
 
+    let imageUrl = existingUser.image;
+    if (!imageUrl || !imageUrl.startsWith('http')) {
+      imageUrl = process.env.DEFAULT_USER_IMAGE_URL || '';
+    }
     res.json({
       userId: existingUser.id,
       email: existingUser.email,
-      image: `${req.protocol}://${req.get('host')}/uploads/images/${existingUser.image}`,
+      image: imageUrl,
       token
     });
   } catch (err) {

@@ -3,6 +3,9 @@
         "DB_USER": "naga",
         "DB_PASSWORD": "5QUhrQrTtmD4VGn9",
         "DB_NAME": "mern",
-        "JWT_KEY": "supersecret_dont_share"
+        "JWT_KEY": "supersecret_dont_share",
+        "CLOUDINARY_CLOUD_NAME":"dzweqphty",
+        "CLOUDINARY_API_KEY":"975568897999319",
+        "CLOUDINARY_API_SECRET":"4UaOuOfCEzkfsCihLlmG5SG7zfM"
     }
 }
